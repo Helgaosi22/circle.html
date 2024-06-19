@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо Фортуны</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+        #wheelCanvas {
+            border: 2px solid black;
+            border-radius: 50%;
+        }
+        #inputSection {
+            margin-bottom: 20px;
+        }
+        #linkSection {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="inputSection">
+        <label for="sectorsInput">Введите названия секций через запятую:</label>
+        <input type="text" id="sectorsInput" size="50">
+        <button onclick="startSpinning()">Начать крутить</button>
+    </div>
+    <canvas id="wheelCanvas" width="450" height="450"></canvas>
+    <script>
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        let sectors = [];
+        let angle = 0;
+        let spinSpeed = 0;
+        let spinning = false;
+
+        function drawWheel() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const radius = canvas.width / 2;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const numSectors = sectors.length;
+            const arcLength = 2 * Math.PI / numSectors;
+
+            for (let i = 0; i < numSectors; i++) {
+                const startAngle = angle + i * arcLength;
+                const endAngle = startAngle + arcLength;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.fillStyle = getColor(i);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate((startAngle + endAngle) / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 24px Arial'; // Увеличиваем размер текста
+                ctx.fillText(sectors[i], radius - 10, 10);
+                ctx.restore();
+            }
+
+            // Draw the marker
+            drawMarker(centerX, centerY, radius);
+        }
+
+        function getColor(index) {
+            const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FFA500", "#800080", "#FFC0CB", "#00FFFF"];
+            return colors[index % colors.length];
+        }
+
+        function drawMarker(centerX, centerY, radius) {
+            const markerSize = 20;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - radius + markerSize); // Нижняя центральная точка
+            ctx.lineTo(centerX - markerSize, centerY - radius - markerSize); // Левая верхняя точка
+            ctx.lineTo(centerX + markerSize, centerY - radius - markerSize); // Правая верхняя точка
+            ctx.closePath();
+            ctx.fillStyle = 'black';
+            ctx.fill();
+        }
+
+        function startSpinning() {
+            const input = document.getElementById('sectorsInput').value;
+            sectors = input.split(',').map(s => s.trim()).filter(s => s);
+            if (sectors.length) {
+                angle = 0;
+                spinSpeed = Math.random() * 0.3 + 0.2;
+                spinning = true;
+                requestAnimationFrame(updateWheel);
+            }
+        }
+
+        function updateWheel() {
+            if (spinning) {
+                angle += spinSpeed;
+                angle %= 2 * Math.PI;
+                spinSpeed *= 0.98;
+                if (spinSpeed < 0.001) {
+                    spinning = false;
+                }
+                drawWheel();
+                requestAnimationFrame(updateWheel);
+            }
+        }
+    </script>
+</body>
+</html>
